@@ -1,10 +1,7 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import requests
 
 app = Flask(__name__)
-
-# Replace YOUR_USER_ID with your Roblox user ID
-ROBLOX_USER_ID = 'YOUR_USER_ID'
 
 @app.route('/')
 def home():
@@ -12,11 +9,18 @@ def home():
 
 @app.route('/recent_uploads', methods=['GET'])
 def get_recent_uploads():
-    url = f'https://inventory.roblox.com/v1/users/{ROBLOX_USER_ID}/assets?assetType=1&limit=9'
+    # Get the user_id parameter from the query string
+    user_id = request.args.get('user_id')
+
+    if not user_id:
+        return jsonify({"error": "User ID is required"}), 400
+
+    # Call Roblox API to get recent assets for the provided user ID
+    url = f'https://inventory.roblox.com/v1/users/{user_id}/assets?assetType=1&limit=9'
     
     try:
         response = requests.get(url)
-        response.raise_for_status()
+        response.raise_for_status()  # Check for HTTP errors
         data = response.json()["data"]
         return jsonify(data)
     except requests.exceptions.RequestException as e:
@@ -24,3 +28,4 @@ def get_recent_uploads():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
